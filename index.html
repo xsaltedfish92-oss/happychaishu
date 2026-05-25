@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>拆书笔记-小说场景资料库</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{
+height:100%;
+overflow:hidden;
+background:#FFFFFF;
+}
+body{
+color:#333333;
+font-family:'PingFang SC','Helvetica Neue',Arial,sans-serif;
+font-size:15px
+}
+
+/* 页面框架：全白 */
+.page{position:fixed;inset:0;display:flex;flex-direction:column;background:#FFFFFF;transform:translateX(100%);transition:transform .27s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.page.active{transform:translateX(0)}
+.page.slide-back{transform:translateX(100%)}
+
+/* 导航栏：清爽干净 */
+.hdr{display:flex;align-items:center;padding:14px 16px;padding-top:max(14px,calc(14px + env(safe-area-inset-top)));border-bottom:1px solid #EFEFEF;gap:10px;background:#FFFFFF;flex-shrink:0;min-height:56px}
+.hdr-title{font-size:17px;font-weight:700;letter-spacing:1px;color:#111111;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr-sub{font-size:12px;color:#888888;margin-top:2px}
+.back-btn{background:none;border:none;color:#555555;cursor:pointer;font-size:24px;padding:2px 8px 2px 0;line-height:1;font-family:inherit;flex-shrink:0}
+.txt-btn{background:none;border:none;color:#0066CC;cursor:pointer;padding:6px 8px;font-size:14px;font-family:inherit;border-radius:4px;flex-shrink:0;white-space:nowrap}
+.txt-btn:active{background:#F5F5F5}
+
+/* 内容区 */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:max(80px,calc(80px + env(safe-area-inset-bottom)))}
+
+/* 列表项 */
+.li{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #F5F5F5;gap:10px;cursor:pointer;background:#FFFFFF;transition:background .1s}
+.li:active{background:#FAFAFA}
+.li-main{flex:1;min-width:0}
+.li-title{font-size:15px;color:#111111;font-weight:500}
+.li-sub{font-size:12px;color:#666666;margin-top:4px}
+.arrow{color:#CCCCCC;font-size:14px;flex-shrink:0}
+
+/* 悬浮按钮：改成沉稳的纯黑/灰风格 */
+.fab{position:fixed;bottom:max(24px,calc(24px + env(safe-area-inset-bottom)));right:20px;width:52px;height:52px;border-radius:50%;background:#222222;color:#FFFFFF;font-size:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:transform .15s;z-index:10;line-height:1}
+.fab:active{transform:scale(.92)}
+
+/* 核心优化：下方的分类标签区，彻底由竖排改为【横排紧凑水平滚动】 */
+.tag-horizontal-box {
+  display: flex;
+  flex-direction: row;
+  padding: 10px 16px;
+  gap: 8px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #EFEFEF;
+  overflow-x: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tag-horizontal-box::-webkit-scrollbar { display: none; } /* 隐藏滚动条更美观 */
+
+.tag-pill{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px; /* 胶囊圆角 */
+  border: 1px solid #EFEFEF;
+  font-family: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all .12s;
+  background: #FAFAFA;
+  color: #333333;
+}
+.tag-pill.on{
+  background:#E6F0FA !important;
+  color:#0066CC !important;
+  border-color:#B3D1F5 !important;
+  font-weight:700;
+}
+
+/* 摘录卡片 */
+.e-card{padding:14px 16px;border-bottom:1px solid #EFEFEF;background:#FFFFFF;cursor:pointer;transition:background .1s}
+.e-card:active{background:#FAFAFA}
+.e-keywords{font-size:14px;color:#444444;line-height:1.6}
+.e-scene-name{font-size:15px;color:#111111;font-weight:500}
+.e-meta{font-size:12px;color:#999999;margin-top:6px}
+
+/* 详情展示 */
+.d-sec{padding:16px 16px;border-bottom:1px solid #EFEFEF;background:#FFFFFF}
+.d-lbl{font-size:11px;color:#999999;letter-spacing:1px;margin-bottom:8px;font-weight:700}
+.d-text{font-size:15px;color:#111111;line-height:1.7;white-space:pre-wrap}
+.kw-chips{display:flex;flex-wrap:wrap;gap:6px}
+.kw-chip{font-size:13px;color:#555555;background:#F0F0F0;padding:4px 10px;border-radius:4px}
+.d-notes{font-size:14px;color:#666666;line-height:1.6;background:#F9F9F9;padding:10px;border-radius:4px}
+.d-time{font-size:11px;color:#BBBBBB}
+
+/* 表单与精简输入框：限制最大宽度 */
+.f-sec{padding:12px 16px;border-bottom:1px solid #F5F5F5;background:#FFFFFF}
+.f-lbl{font-size:12px;color:#666666;margin-bottom:6px;font-weight:700}
+.inp{width:100%;max-width:500px;background:#FFFFFF;border:1px solid #CCCCCC;border-radius:6px;color:#333333;padding:8px 12px;font-size:14px;font-family:inherit;line-height:1.6;resize:vertical}
+.inp:focus{outline:none;border-color:#0066CC}
+.inp-single{resize:none}
+.f-hint{font-size:11px;color:#999999;margin-top:4px}
+
+/* 内置表单专用的标签横向滚动选择器 */
+.tag-sel-horizontal-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 2px 0;
+}
+.tag-sel-horizontal-scroll::-webkit-scrollbar { display: none; }
+.tag-sel-btn{
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid #EFEFEF;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  background: #FAFAFA;
+  color: #333333;
+  transition: all .1s;
+}
+.tag-sel-btn.on{background:#E6F0FA;color:#0066CC;border-color:#0066CC;font-weight:700}
+
+/* 搜索框 */
+.search-wrap{padding:10px 16px;border-bottom:1px solid #EFEFEF;background:#FFFFFF;flex-shrink:0}
+.search-inp{width:100%;max-width:500px;background:#F5F5F5;border:1px solid transparent;border-radius:6px;color:#333333;padding:8px 12px;font-size:14px;font-family:inherit}
+.search-inp:focus{outline:none;border-color:#CCCCCC;background:#FFFFFF}
+
+/* 展开的场景子列表 */
+.ch-scenes{background:#FAFAFA;padding:4px 16px 8px 36px;border-bottom:1px solid #EFEFEF}
+.sc-prev{font-size:14px;color:#333333;padding:10px 12px;background:#FFFFFF;border:1px solid #EFEFEF;border-radius:6px;cursor:pointer;margin-top:6px}
+.sc-prev:active{background:#F5F5F5}
+
+.empty{text-align:center;padding:40px 20px;color:#999999;font-size:14px;line-height:2}
+
+/* 按钮样式 */
+.save-btn{background:#222222;border:none;color:#FFFFFF;padding:10px 24px;border-radius:6px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s}
+.save-btn:active{background:#444444}
+.del-btn{background:none;border:1px solid #FF3B30;color:#FF3B30;padding:10px;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer;width:100%;max-width:500px;transition:background .1s}
+.del-btn:active{background:#FFEBEB}
+
+/* 管理行 */
+.mgr-row{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #EFEFEF;background:#FFFFFF}
+.mgr-inp{flex:1;max-width:300px;background:#FFFFFF;border:1px solid #CCCCCC;border-radius:4px;color:#333333;padding:6px 10px;font-size:14px;font-family:inherit}
+.sm-btn{background:#FFFFFF;border:1px solid #CCCCCC;color:#555555;padding:6px 12px;border-radius:4px;font-family:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.sm-btn:active{background:#F5F5F5}
+.sm-btn.danger{color:#FF3B30;border-color:#FF3B30}
+
+.type-switch{display:flex;gap:8px;max-width:500px}
+.type-btn{flex:1;padding:10px;border-radius:6px;border:1px solid #CCCCCC;font-family:inherit;font-size:13px;cursor:pointer;transition:all .12s;background:#FFFFFF;color:#555555;text-align:center}
+.type-btn.on{background:#222222;border-color:#222222;color:#FFFFFF;font-weight:700}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#CCCCCC;border-radius:2px}
+</style>
+</head>
+<body>
+
+<div id="pg-books" class="page active">
+  <div class="hdr">
+    <div style="flex:1">
+      <div class="hdr-title">拆书笔记</div>
+      <div class="hdr-sub" id="books-sub"></div>
+    </div>
+    <button class="txt-btn" id="books-mgr-btn" onclick="toggleBookManage()">管理</button>
+    <button class="txt-btn" onclick="exportTxt()">导出全部</button>
+    <button class="txt-btn" onclick="goTo('pg-tags')">标签设置</button>
+  </div>
+  <div class="content" id="books-list"></div>
+  <div class="fab" id="books-fab" onclick="addBook()">+</div>
+</div>
+
+<div id="pg-chapters" class="page">
+  <div class="hdr">
+    <button class="back-btn" onclick="back()">‹</button>
+    <div class="hdr-title" id="ch-book-title"></div>
+    <button class="txt-btn" id="ch-mgr-btn" onclick="toggleChapterManage()">管理</button>
+  </div>
+  <div class="search-wrap">
+    <input class="search-inp" id="scene-search" placeholder="搜索场景名（跨所有章节）…" oninput="searchScenes(this.value)">
+  </div>
+  <div class="content" id="chapters-list"></div>
+  <div class="fab" id="ch-fab" onclick="addChapter()">+</div>
+</div>
+
+<div id="pg-cv" class="page">
+  <div class="hdr">
+    <button class="back-btn" onclick="back()">‹</button>
+    <div class="hdr-title" id="cv-title"></div>
+    <button class="txt-btn" onclick="exportChapter()">导出单章</button>
+  </div>
+  
+  <div class="content" style="padding-bottom:100px;">
+    <div id="cv-inline-form" style="background:#FFFFFF; border-bottom:4px solid #F5F5F5;"></div>
+
+    <div class="tag-horizontal-box" id="cv-tags"></div>
+    
+    <div id="cv-entries"></div>
+  </div>
+</div>
+
+<div id="pg-detail" class="page">
+  <div class="hdr">
+    <button class="back-btn" onclick="back()">‹</button>
+    <div class="hdr-title" id="det-title"></div>
+    <button class="txt-btn" id="det-edit-btn" onclick="toggleEdit()">编辑</button>
+  </div>
+  <div class="content" id="det-content"></div>
+</div>
+
+<div id="pg-tags" class="page">
+  <div class="hdr">
+    <button class="back-btn" onclick="back()">‹</button>
+    <div class="hdr-title">标签管理</div>
+  </div>
+  <div class="content" id="tags-content"></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────
+// DATA MODEL
+// ─────────────────────────────────────────────────────────
+const DEFAULT_TAGS = [
+  {id:'tg_wm',label:'外貌'},
+  {id:'tg_hj',label:'环境'},
+  {id:'tg_dz',label:'动作'},
+  {id:'tg_xd',label:'xx道'},
+  {id:'tg_mr',label:'骂人'},
+  {id:'tg_pj',label:'评价他人'},
+  {id:'tg_xz',label:'修真设定'},
+  {id:'tg_cs',label:'常识'},
+  {id:'tg_wj',label:'物件'},
+  {id:'tg_sy',label:'熟语成语'},
+  {id:'tg_zz',label:'小说转折句'},
+];
+const SCENE_TAG = {id:'__scene__',label:'场景'};
+
+function loadDB(){try{return JSON.parse(localStorage.getItem('cbj3'))||newDB()}catch{return newDB()}}
+function newDB(){return{books:[],tags:[...DEFAULT_TAGS],entries:{}}}
+function save(){localStorage.setItem('cbj3',JSON.stringify(db))}
+function uid(){return '_'+Math.random().toString(36).slice(2,9)}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function fmtDate(ts){const d=new Date(ts);return`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+function getEntries(chId){return db.entries[chId]||[]}
+
+let db = loadDB();
+
+// ─────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────
+let stack = ['pg-books'];
+
+function goTo(id){
+  const cur = stack[stack.length-1];
+  document.getElementById(cur).classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  stack.push(id);
+}
+
+function back(){
+  if(stack.length<=1) return;
+  const cur = stack.pop();
+  const prev = stack[stack.length-1];
+  const el = document.getElementById(cur);
+  el.style.transition='transform .24s cubic-bezier(.4,0,.2,1)';
+  el.style.transform='translateX(100%)';
+  setTimeout(()=>{el.style.transform='';el.style.transition='';el.classList.remove('active')},250);
+  document.getElementById(prev).classList.add('active');
+  if(prev==='pg-books') renderBooks();
+  if(prev==='pg-chapters') renderChapters();
+  if(prev==='pg-cv') renderCV();
+}
+
+// ─────────────────────────────────────────────────────────
+// PAGE: 书籍列表
+// ─────────────────────────────────────────────────────────
+let bookManage = false;
+function renderBooks(){
+  document.getElementById('books-sub').textContent=`${db.books.length} 本书`;
+  const el=document.getElementById('books-list');
+  if(!db.books.length){el.innerHTML='<div class="empty">还没有书籍<br>点击右下角 + 添加第一本</div>';return}
+  if(bookManage){
+    el.innerHTML=db.books.map(b=>{
+      const cnt=b.chapters.reduce((a,c)=>a+getEntries(c.id).length,0);
+      return`<div class="mgr-row">
+        <div style="font-size:14px;color:#333;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">《${esc(b.name)}》</div>
+        <span style="font-size:12px;color:#888;flex-shrink:0;margin-right:10px">${cnt}条摘录</span>
+        <button class="sm-btn danger" onclick="deleteBook('${b.id}')">删除</button>
+      </div>`;
+    }).join('');
+    return;
+  }
+  el.innerHTML=db.books.map(b=>{
+    const chCnt=b.chapters.length;
+    const eCnt=b.chapters.reduce((a,c)=>a+getEntries(c.id).length,0);
+    return`<div class="li" onclick="openBook('${b.id}')">
+      <div class="li-main">
+        <div class="li-title">《${esc(b.name)}》</div>
+        <div class="li-sub">${chCnt} 个章节组 · ${eCnt} 条摘录资料</div>
+      </div>
+      <span class="arrow">›</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleBookManage(){
+  bookManage=!bookManage;
+  document.getElementById('books-mgr-btn').textContent=bookManage?'完成':'管理';
+  document.getElementById('books-fab').style.display=bookManage?'none':'flex';
+  renderBooks();
+}
+
+function addBook(){
+  const name=prompt('请输入书名：');
+  if(!name?.trim())return;
+  db.books.push({id:uid(),name:name.trim(),chapters:[]});
+  save();renderBooks();
+}
+
+function deleteBook(id){
+  const b=db.books.find(x=>x.id===id);
+  if(!b||!confirm(`确认要删除《${b.name}》及该书下的所有章节和摘录吗？此操作不可恢复。`))return;
+  b.chapters.forEach(c=>delete db.entries[c.id]);
+  db.books=db.books.filter(x=>x.id!==id);
+  save();renderBooks();
+}
+
+// ─────────────────────────────────────────────────────────
+// PAGE: 章节列表
+// ─────────────────────────────────────────────────────────
+let curBook=null, chManage=false, expanded=new Set(), searchQ='';
+
+function openBook(id){
+  curBook=db.books.find(b=>b.id===id);
+  chManage=false;
+  expanded.clear(); 
+  searchQ='';
+  document.getElementById('scene-search').value='';
+  renderChapters();
+  goTo('pg-chapters');
+}
+
+function renderChapters(){
+  document.getElementById('ch-book-title').textContent=curBook.name;
+  const el=document.getElementById('chapters-list');
+  const q=searchQ.trim();
+  if(q){
+    const res=[];
+    for(const ch of curBook.chapters){
+      for(const e of getEntries(ch.id)){
+        if(e.type==='scene'&&e.sceneName.includes(q)) res.push({e,ch});
+      }
+    }
+    if(!res.length){el.innerHTML=`<div class="empty">没有找到包含「${esc(q)}」的场景</div>`;return}
+    el.innerHTML=res.map(({e,ch})=>`
+      <div class="li" onclick="openDetail('${e.id}','${ch.id}')">
+        <div class="li-main">
+          <div class="li-title">${esc(e.sceneName)}</div>
+          <div class="li-sub">所属章节组：${esc(ch.name)}</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>`).join('');
+    return;
+  }
+
+  if(!curBook.chapters.length){el.innerHTML='<div class="empty">还没有章节组<br>点击右下角 + 创建（如：1-5章）</div>';return}
+
+  if(chManage){
+    el.innerHTML=curBook.chapters.map(ch=>{
+      const cnt=getEntries(ch.id).length;
+      return`<div class="mgr-row">
+        <input class="mgr-inp" value="${esc(ch.name)}" onchange="renameChapter('${ch.id}',this.value)">
+        <span style="font-size:12px;color:#888;margin-right:8px">${cnt}条</span>
+        <button class="sm-btn danger" onclick="deleteChapter('${ch.id}')">删除</button>
+      </div>`;
+    }).join('')+`<div style="padding:14px 16px;font-size:12px;color:#999999">点击输入框名称可直接修改</div>`;
+    return;
+  }
+
+  el.innerHTML=curBook.chapters.map(ch=>{
+    const entries=getEntries(ch.id);
+    const scenes=entries.filter(e=>e.type==='scene');
+    const exp=expanded.has(ch.id); 
+    let scHtml='';
+    if(exp){
+      scHtml=scenes.length
+        ?`<div class="ch-scenes">${scenes.map(s=>`<div class="sc-prev" onclick="openDetail('${s.id}','${ch.id}')">${esc(s.sceneName)}</div>`).join('')}</div>`
+        :`<div class="ch-scenes"><span style="font-size:13px;color:#999999">暂无独立场景资料</span></div>`;
+    }
+    return`<div style="border-bottom: 1px solid #F5F5F5;">
+      <div class="li" style="border-bottom:none">
+        <span onclick="toggleExp('${ch.id}')" style="font-size:18px;color:#999999;padding:4px 12px;cursor:pointer;transform:rotate(${exp?90:0}deg);display:inline-block;transition:transform .18s;flex-shrink:0">›</span>
+        <div class="li-main" onclick="openChapter('${ch.id}')">
+          <div class="li-title">${esc(ch.name)}</div>
+          <div class="li-sub">${entries.length} 条资料 · ${scenes.length} 个独立场景</div>
+        </div>
+        <span class="arrow" onclick="openChapter('${ch.id}')">进入 ›</span>
+      </div>${scHtml}</div>`;
+  }).join('');
+}
+
+function toggleExp(id){
+  if(expanded.has(id)) expanded.delete(id);
+  else expanded.add(id);
+  renderChapters();
+}
+
+function searchScenes(q){searchQ=q;renderChapters()}
+
+function toggleChapterManage(){
+  chManage=!chManage;
+  document.getElementById('ch-mgr-btn').textContent=chManage?'完成':'管理';
+  document.getElementById('ch-fab').style.display=chManage?'none':'flex';
+  renderChapters();
+}
+
+function addChapter(){
+  const name=prompt('请输入章节组名称（如：1-5章、大结局）：');
+  if(!name?.trim())return;
+  curBook.chapters.push({id:uid(),name:name.trim()});
+  save();renderChapters();
+}
+
+function renameChapter(id,name){
+  const ch=curBook.chapters.find(c=>c.id===id);
+  if(ch&&name.trim()){ch.name=name.trim();save()}
+}
+
+function deleteChapter(id){
+  const ch=curBook.chapters.find(c=>c.id===id);
+  if(!ch||!confirm(`确认要删除「${ch.name}」及其内部所有的摘录和场景吗？`))return;
+  curBook.chapters=curBook.chapters.filter(c=>c.id!==id);
+  delete db.entries[id];
+  save();renderChapters();
+}
+
+// ─────────────────────────────────────────────────────────
+// PAGE: 章节内容（终极无损高能修正区：平铺输入与无缝横排）
+// ─────────────────────────────────────────────────────────
+let curChapter=null, curTag=null;
+// 核心原版要素：精细还原初始化状态变量 nf
+let nf={type:'regular',tagId:null,sentence:'',keywords:'',notes:'',sceneName:'',passage:''};
+
+function openChapter(id){
+  curChapter=curBook.chapters.find(c=>c.id===id);
+  curTag=SCENE_TAG.id; // 默认切到场景分类
+  
+  // 核心原版要素：严格复刻原版 openNewEntry 对新数据的分流初始化处理
+  nf={
+    type: curTag==='__scene__'?'scene':'regular',
+    tagId: curTag==='__scene__'?db.tags[0]?.id:(curTag||db.tags[0]?.id),
+    sentence:'',keywords:'',notes:'',sceneName:'',passage:''
+  };
+  
+  renderCV();
+  goTo('pg-cv');
+}
+
+// 核心原版要素：完美保留输入过程中的高灵敏度缓存机制，确保打字一半切标签时不丢数据
+function cacheInlineInput(){
+  if(nf.type==='scene'){
+    nf.sceneName=document.getElementById('ni-sname')?.value??nf.sceneName;
+    nf.passage=document.getElementById('ni-passage')?.value??nf.passage;
+  } else {
+    nf.sentence=document.getElementById('ni-sent')?.value??nf.sentence;
+    nf.keywords=document.getElementById('ni-kw')?.value??nf.keywords;
+  }
+  nf.notes=document.getElementById('ni-notes')?.value??nf.notes;
+}
+
+function switchInlineType(t){
+  cacheInlineInput();
+  nf.type=t;
+  renderInlineForm();
+}
+
+function selectInlineTagInForm(id){
+  nf.tagId=id;
+  document.querySelectorAll('[data-form-tid]').forEach(btn=>{
+    const tid=btn.dataset.formTid;
+    btn.classList.toggle('on',tid===id);
+  });
+}
+
+// 核心功能：原地平铺原本属于新页面的表单逻辑，且保留每一个原版层级顺位要素
+function renderInlineForm(){
+  const el = document.getElementById('cv-inline-form');
+  
+  // 类型选择器
+  const typeHtml = `<div class="f-sec"><div class="f-lbl">资料归类类型</div><div class="type-switch">
+    <button class="type-btn${nf.type=='regular'?' on':''}" onclick="switchInlineType('regular')">绝妙摘录句</button>
+    <button class="type-btn${nf.type=='scene'?' on':''}" onclick="switchInlineType('scene')">独立大场景</button>
+  </div></div>`;
+
+  if(nf.type==='scene'){
+    el.innerHTML = typeHtml + `
+      <div class="f-sec"><div class="f-lbl">场景名称</div><input class="inp" id="ni-sname" placeholder="如：墨燃中毒、两世怨解" value="${esc(nf.sceneName)}"></div>
+      <div class="f-sec"><div class="f-lbl">原文核心段落</div><textarea class="inp" id="ni-passage" rows="4" placeholder="在这里粘贴小说里的场景原文细致描写…">${esc(nf.passage)}</textarea></div>
+      <div class="f-sec"><div class="f-lbl">我的分析笔记</div><textarea class="inp" id="ni-notes" rows="3" placeholder="写下这个场景的节奏、转折设计或情绪爆点感想…">${esc(nf.notes)}</textarea></div>
+      <div class="f-sec" style="border:none; text-align:right;"><button class="save-btn" onclick="saveInlineRecord()">直接保存场景</button></div>`;
+  } else {
+    if(!nf.tagId && db.tags.length) nf.tagId = db.tags[0].id;
+    
+    // 严格满足结构要求：1. 原句 -> 2. 标签横排选择器 -> 3. 词组串 -> 4. 我的笔记 -> 5. 保存按钮
+    el.innerHTML = typeHtml + `
+      <div class="f-sec">
+        <div class="f-lbl">原句</div>
+        <textarea class="inp" id="ni-sent" rows="3" placeholder="请粘贴小说原文中惊艳、值得拆解的句子…">${esc(nf.sentence)}</textarea>
+      </div>
+      
+      <div class="f-sec">
+        <div class="f-lbl">选择核心对应标签（仅用于保存分流）</div>
+        <div class="tag-sel-horizontal-scroll">
+          ${db.tags.map(t=>`<button class="tag-sel-btn${nf.tagId===t.id?' on':''}" data-form-tid="${t.id}" onclick="selectInlineTagInForm('${t.id}')">🏷️ ${esc(t.label)}</button>`).join('')}
+        </div>
+      </div>
+      
+      <div class="f-sec">
+        <div class="f-lbl">词组串</div>
+        <input class="inp" id="ni-kw" placeholder="例如：眉目极美 面容骄奢 铠甲生寒" value="${esc(nf.keywords)}">
+      </div>
+      
+      <div class="f-sec">
+        <div class="f-lbl">我的笔记</div>
+        <textarea class="inp" id="ni-notes" rows="3" placeholder="拆解分析：分析它的句式结构、修辞特色或人设加成原因…">${esc(nf.notes)}</textarea>
+      </div>
+      
+      <div class="f-sec" style="border:none; text-align:right;">
+        <button class="save-btn" onclick="saveInlineRecord()">直接保存摘录资料</button>
+      </div>`;
+  }
+}
+
+function renderCV(){
+  document.getElementById('cv-title').textContent=curChapter.name;
+  
+  // 渲染并加载上半部分平铺输入表单
+  renderInlineForm();
+  
+  // 核心原版要素：提取全量标签和内置场景，确保横向排布时不破坏原本的 cnt 计数拼接逻辑
+  const allTags=[SCENE_TAG,...db.tags]; 
+  const entries=getEntries(curChapter.id);
+
+  // 修改为直观、整齐、节省高度的【横排大分类】
+  document.getElementById('cv-tags').innerHTML=allTags.map(t=>{
+    const cnt=t.id==='__scene__'
+      ?entries.filter(e=>e.type==='scene').length
+      :entries.filter(e=>e.type==='regular'&&e.tagId===t.id).length;
+    const on=curTag===t.id;
+    return`<button class="tag-pill${on?' on':''}" onclick="selTag('${t.id}')">
+      <span>${esc(t.label)}</span>
+      <span style="font-size:12px;opacity:0.6">${cnt?cnt+' 条':'-'}</span>
+    </button>`;
+  }).join('');
+
+  // 核心要素判定：完美重现原版对场景卡片与摘录句卡片的差异化展示、条件过滤分支
+  const el=document.getElementById('cv-entries');
+  if(curTag==='__scene__'){
+    const sc=entries.filter(e=>e.type==='scene');
+    el.innerHTML=sc.length
+      ?sc.map(e=>`<div class="e-card" onclick="openDetail('${e.id}','${curChapter.id}')">
+          <div class="e-scene-name">🎬 场景：${esc(e.sceneName)}</div>
+          <div class="e-meta">${e.notes?'📝 有分析笔记':''}${e.notes?' · ':''}${fmtDate(e.ts)}</div>
+        </div>`).join('')
+      :'<div class="empty">当前章节组暂无场景资料<br>请在上方录入您的首个大场景</div>';
+  } else {
+    const te=entries.filter(e=>e.type==='regular'&&e.tagId===curTag);
+    el.innerHTML=te.length
+      ?te.map(e=>`<div class="e-card" onclick="openDetail('${e.id}','${curChapter.id}')">
+          <div class="e-keywords" style="font-weight:500;color:#111;">${esc(e.sentence.slice(0,60))}${e.sentence.length>60?'…':''}</div>
+          ${e.keywords?`<div style="font-size:13px;color:#0066CC;margin-top:6px">核心词：${esc(e.keywords)}</div>`:''}
+          <div class="e-meta">${e.notes?'📝 有分析笔记 · ':''}${fmtDate(e.ts)}</div>
+        </div>`).join('')
+      :'<div class="empty">当前标签下暂无摘录句子<br>请在上方快捷收集您的精彩原句</div>';
+  }
+}
+
+function selTag(id){
+  cacheInlineInput(); // 切换下方分类浏览列表时，顺手保留上方还没写完的输入，绝不丢失
+  curTag=id;
+  renderCV();
+}
+
+// 核心原版要素：严格复刻原版 saveNewRecord 的逻辑切片，确保存储格式与历史数据严丝合缝
+function saveInlineRecord(){
+  if(!db.entries[curChapter.id]) db.entries[curChapter.id] = [];
+  
+  if(nf.type==='scene'){
+    const sn=document.getElementById('ni-sname')?.value.trim();
+    const pa=document.getElementById('ni-passage')?.value.trim();
+    const no=document.getElementById('ni-notes')?.value.trim();
+    if(!sn||!pa){alert('场景名和原文段落不能为空');return}
+    db.entries[curChapter.id].push({id:uid(),type:'scene',sceneName:sn,passage:pa,notes:no,ts:Date.now()});
+  } else {
+    const se=document.getElementById('ni-sent')?.value.trim();
+    const kw=document.getElementById('ni-kw')?.value.trim();
+    const no=document.getElementById('ni-notes')?.value.trim();
+    if(!se){alert('原文惊艳句子不能为空');return}
+    db.entries[curChapter.id].push({id:uid(),type:'regular',tagId:nf.tagId,sentence:se,keywords:kw,notes:no,ts:Date.now()});
+  }
+  
+  save();
+  
+  // 保存成功后重置内容缓冲区
+  nf.sentence=''; nf.keywords=''; nf.notes=''; nf.sceneName=''; nf.passage='';
+  
+  renderCV(); // 刷新当前页面和数据列表
+}
+
+// ─────────────────────────────────────────────────────────
+// PAGE: 摘录/场景 详情与保存
+// ─────────────────────────────────────────────────────────
+let curEntry=null, detChId=null, editing=false;
+
+function openDetail(entryId, chId){
+  detChId=chId;
+  curEntry=(db.entries[chId]||[]).find(e=>e.id===entryId);
+  if(!curEntry)return;
+  editing=false;
+  renderDetail();goTo('pg-detail');
+}
+
+function renderDetail(){
+  const e=curEntry;
+  document.getElementById('det-edit-btn').textContent=editing?'保存':'编辑';
+  const tag=db.tags.find(t=>t.id===e.tagId);
+
+  if(e.type==='scene'){
+    document.getElementById('det-title').textContent=editing?'编辑场景资料':esc(e.sceneName);
+    document.getElementById('det-content').innerHTML=editing?`
+      <div class="f-sec"><div class="f-lbl">场景名称</div><input class="inp" id="di-sname" value="${esc(e.sceneName)}"></div>
+      <div class="f-sec"><div class="f-lbl">原文段落</div><textarea class="inp" id="di-passage" rows="8">${esc(e.passage)}</textarea></div>
+      <div class="f-sec"><div class="f-lbl">我的笔记</div><textarea class="inp" id="di-notes" rows="5">${esc(e.notes||'')}</textarea></div>
+      <div class="f-sec" style="border:none"><button class="del-btn" onclick="delEntry()">删除场景资料</button></div>`
+    :`<div class="d-sec"><div class="d-lbl">场景名称</div><div class="d-text" style="font-weight:700">${esc(e.sceneName)}</div></div>
+      <div class="d-sec"><div class="d-lbl">原文核心段落</div><div class="d-text">${esc(e.passage)}</div></div>
+      ${e.notes?`<div class="d-sec"><div class="d-lbl">我的分析笔记</div><div class="d-notes">${esc(e.notes)}</div></div>`:''}
+      <div class="d-sec" style="border:none"><div class="d-time">录入时间：${fmtDate(e.ts)}</div></div>`;
+  } else {
+    document.getElementById('det-title').textContent=editing?'编辑摘录句':(tag?.label||'摘录明细');
+    document.getElementById('det-content').innerHTML=editing?`
+      <div class="f-sec"><div class="f-lbl">原句</div><textarea class="inp" id="di-sent" rows="6">${esc(e.sentence)}</textarea></div>
+      <div class="f-sec"><div class="f-lbl">词组串</div><input class="inp" id="di-kw" value="${esc(e.keywords||'')}"></div>
+      <div class="f-sec"><div class="f-lbl">我的笔记</div><textarea class="inp" id="di-notes" rows="5">${esc(e.notes||'')}</textarea></div>
+      <div class="f-sec" style="border:none"><button class="del-btn" onclick="delEntry()">删除这条摘录</button></div>`
+    :`<div class="d-sec"><div class="d-lbl">原文绝妙句子</div><div class="d-text">${esc(e.sentence)}</div></div>
+      ${e.keywords?`<div class="d-sec"><div class="d-lbl">提取词组串</div><div class="kw-chips">${e.keywords.split(/\s+/).filter(Boolean).map(k=>`<span class="kw-chip">${esc(k)}</span>`).join('')}</div></div>`:''}
+      ${e.notes?`<div class="d-sec"><div class="d-lbl">我的分析笔记</div><div class="d-notes">${esc(e.notes)}</div></div>`:''}
+      <div class="d-sec" style="border:none"><div class="d-time">录入时间：${fmtDate(e.ts)}</div></div>`;
+  }
+}
+
+function toggleEdit(){
+  if(editing){
+    const e=curEntry;
+    if(e.type==='scene'){
+      const sn=document.getElementById('di-sname')?.value.trim();
+      const pa=document.getElementById('di-passage')?.value.trim();
+      const no=document.getElementById('di-notes')?.value.trim();
+      if(!sn||!pa){alert('场景名称和原文段落不能为空');return}
+      e.sceneName=sn;e.passage=pa;e.notes=no;
+    } else {
+      const se=document.getElementById('di-sent')?.value.trim();
+      const kw=document.getElementById('di-kw')?.value.trim();
+      const no=document.getElementById('di-notes')?.value.trim();
+      if(!se){alert('原句不能为空');return}
+      e.sentence=se;e.keywords=kw;e.notes=no;
+    }
+    save();editing=false;
+  } else {editing=true}
+  renderDetail();
+}
+
+function delEntry(){
+  if(!confirm('确定要删除这条极其宝贵的写作资料吗？'))return;
+  db.entries[detChId]=(db.entries[detChId]||[]).filter(e=>e.id!==curEntry.id);
+  save();back();
+}
+
+// ─────────────────────────────────────────────────────────
+// PAGE: 标签设置与管理
+// ─────────────────────────────────────────────────────────
+let newTagLabel='';
+
+function renderTags(){
+  const el=document.getElementById('tags-content');
+  el.innerHTML=`
+    <div class="f-sec">
+      <div class="f-lbl">新建自定义分类标签</div>
+      <div style="display:flex;gap:8px;max-width:500px">
+        <input class="inp inp-single" id="tg-lbl" placeholder="输入新标签名（如: 玩梗/打脸）" value="${esc(newTagLabel)}" oninput="newTagLabel=this.value" style="flex:1">
+        <button class="save-btn" style="padding:10px 16px" onclick="addTag()">创 建</button>
+      </div>
+    </div>
+    <div style="padding:14px 16px;font-size:12px;color:#888888;font-weight:700;border-bottom:1px solid #EFEFEF">当前已启用的资料分类标签</div>
+    ${db.tags.map(t=>`
+      <div class="mgr-row">
+        <input class="mgr-inp" value="${esc(t.label)}" onchange="renameTag('${t.id}',this.value)">
+        <button class="sm-btn danger" onclick="delTag('${t.id}')">移除</button>
+      </div>`).join('')}
+    <div style="padding:16px;font-size:12px;color:#999999;line-height:1.6">温馨提示：【场景】属于底层数据框架，为系统内置核心组件，无需在此手动管理。点击已有标签名称可直接重新命名。</div>`;
+}
+
+function addTag(){
+  const label=document.getElementById('tg-lbl')?.value.trim();
+  if(!label)return;
+  db.tags.push({id:uid(),label});
+  newTagLabel='';save();renderTags();
+}
+function renameTag(id,name){const t=db.tags.find(t=>t.id===id);if(t&&name.trim()){t.label=name.trim();save()}}
+function delTag(id){
+  if(!confirm('确定要移除该分类标签吗？注意：移除标签不会删除句子，原句子会自动进入无主状态。'))return;
+  db.tags=db.tags.filter(t=>t.id!==id);
+  save();renderTags();
+}
+
+// ─────────────────────────────────────────────────────────
+// 导出逻辑（单章导出与全书整本导出）
+// ─────────────────────────────────────────────────────────
+function exportChapter(){
+  const entries=getEntries(curChapter.id);
+  if(!entries.length){alert('当前章节组内空空如也，无需导出');return}
+  const lines=[`拆书库数据导出 —《${curBook.name}》· ${curChapter.name}`,'=' .repeat(50)];
+  const scenes=entries.filter(e=>e.type==='scene');
+  if(scenes.length){
+    lines.push('\n【🎬 场景描写拆解】');
+    scenes.forEach((e,i)=>{
+      lines.push(`\n[场景 ${i+1}] ${e.sceneName}`);
+      lines.push(`- 原文核心描摹：\n  ${e.passage.replace(/\n/g,'\n  ')}`);
+      if(e.notes) lines.push(`- 个人深度笔记：\n  ${e.notes}`);
+    });
+  }
+  for(const tag of db.tags){
+    const te=entries.filter(e=>e.type==='regular'&&e.tagId===tag.id);
+    if(!te.length)continue;
+    lines.push(`\n【🏷️ 分类：${tag.label}】`);
+    te.forEach((e,i)=>{
+      lines.push(`\n(${i+1}) 原文精彩句子：${e.sentence}`);
+      if(e.keywords) lines.push(`    核心词组：${e.keywords}`);
+      if(e.notes) lines.push(`    个人笔记：${e.notes}`);
+    });
+  }
+  const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`【拆书笔记】${curBook.name}_${curChapter.name}.txt`;
+  a.click();
+}
+
+function exportTxt(){
+  if(!db.books.length){alert('资料库中还没有任何书籍，请先添加');return}
+  const lines=[`全库小说写作场景资料库深度导出档案`,'=' .repeat(60), ''];
+  for(const book of db.books){
+    lines.push(`\n\n\n# 📘 《${book.name}》`);
+    lines.push('=' .repeat(40));
+    for(const ch of book.chapters){
+      const entries=getEntries(ch.id);
+      if(!entries.length)continue;
+      lines.push(`\n\n## 📌 章节组：${ch.name}`);
+      lines.push('-' .repeat(30));
+      const scenes=entries.filter(e=>e.type==='scene');
+      if(scenes.length){
+        lines.push('\n  ▸ 🎬 场景描写细分：');
+        scenes.forEach((e,i)=>{
+          lines.push(`    ${i+1}. 场景名称：${e.sceneName}`);
+          lines.push(`       原文选段：${e.passage.replace(/\n/g,'\n       ')}`);
+          if(e.notes) lines.push(`       分析笔记：${e.notes}`);
+        });
+      }
+      for(const tag of db.tags){
+        const te=entries.filter(e=>e.type==='regular'&&e.tagId===tag.id);
+        if(!te.length)continue;
+        lines.push(`\n  ▸ 🏷️ 核心标签：${tag.label}`);
+        te.forEach((e,i)=>{
+          lines.push(`    ${i+1}. 精选句子：${e.sentence}`);
+          if(e.keywords) lines.push(`       提取词组：${e.keywords}`);
+          if(e.notes) lines.push(`       拆解笔记：${e.notes}`);
+        });
+      }
+    }
+  }
+  const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='全库小说拆书笔记归档.txt';
+  a.click();
+}
+
+// ─────────────────────────────────────────────────────────
+// 运行初始化
+// ─────────────────────────────────────────────────────────
+renderBooks();
+const _goTo=goTo;
+window.goTo=function(id){_goTo(id);if(id==='pg-tags')renderTags()};
+</script>
+</body>
+</html>
