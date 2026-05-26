@@ -124,7 +124,7 @@ body{color:#333333;font-family:'PingFang SC','Helvetica Neue',Arial,sans-serif;f
       <div class="hdr-sub" id="books-sub"></div>
     </div>
     <button class="txt-btn" id="books-mgr-btn" onclick="toggleBookManage()">管理</button>
-    <button class="txt-btn" onclick="exportTxt()">导出全部</button>
+    <button class="txt-btn" onclick="backupLocal()">💾备份</button><button class="txt-btn" onclick="importLocal()">📂导入</button><button class="txt-btn" onclick="exportTxt()">导出TXT</button>
     <button class="txt-btn" onclick="goTo('pg-tags')">标签设置</button>
   </div>
   <div class="content" id="books-list"></div>
@@ -185,8 +185,8 @@ const firebaseConfig = {
   databaseURL:       "https://chaishu-a3fa6-default-rtdb.firebaseio.com",   // 格式: https://xxx-default-rtdb.firebaseio.com
   projectId:         "chaishu-a3fa6",
   storageBucket:     "chaishu-a3fa6.firebasestorage.app",
-  messagingSenderId: "79008152123",
-  appId:             "1:79008152123:web:a0f2e68c494aabb7277a1e"
+  messagingSenderId: "79088152123",
+  appId:             "1:79088152123:web:a8f2e68c494aabb7277a1e"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -237,19 +237,30 @@ function getEntries(chId){return db.entries[chId]||[]}
 let db = newDB(); // 先用空数据，等云端加载完再替换
 
 // ④ 从 Firebase 异步加载数据，完成后才显示主界面
+// 历史数据兜底（无网络时使用）
+const SEED_DATA = {"books": [{"chapters": [{"id": "_jgddvq6", "name": "1-5章"}], "id": "_ewfxh6a", "name": "二哈与大白猫"}, {"id": "_x12gwdx", "name": "桃花债"}], "entries": {"_jgddvq6": [{"id": "_f66i9zn", "keywords": "眉目俊美 面容骄奢 银蓝轻铠 狮首腰带（闪烁） 马尾高束 绾发扣", "notes": "简要概括配角，设定有（腰带，马尾，轻铠）", "sentence": "然而这时，一个眉目极其俊美，面容骄奢的青年走了出来。他穿着一袭银蓝轻铠，狮首腰带，马尾高束，底部绾着一只精致的银色发扣。\n殿内金砖之上，薛蒙孑然而立，马尾散落，轻铠闪烁。", "tagId": "tg_wm", "ts": 1779766734477, "type": "regular"}, {"id": "_mi6if7y", "keywords": "浑身赤裸 面目稚嫩 五官玲珑 玉雪可爱 羊脂白玉 雌雄莫辨 小白脸 露出截儿肩膀脖子 暧昧的痕迹", "notes": "", "sentence": "还是个浑身赤裸的男人！\n此男子面目稚嫩，五官玲珑，瞧上去玉雪可爱，雌雄莫辨。\n墨燃脸上毫无表情，内心却波涛汹涌，盯着那张沉浸在睡梦中的小白脸看了半天，突然想起来了。\n然而，这会儿他却活生生，白嫩嫩地窝在自己床侧，锦被里露出截儿肩膀脖子，青青紫紫的，全是暧昧的痕迹。\n一条羊脂白玉似的粉嫩大腿\n那美人慵懒地坐了起来，身上披着的薄薄锦被顺着肩膀滑下，露出大片晃眼的白皙身子，他笼着柔软长发，挑起一双犹带睡意的桃花眼，眼尾晕染着残红，打了个哈欠。", "tagId": "tg_wm", "ts": 1779766870039, "type": "regular"}, {"id": "_m04en4l", "keywords": "面目颇为稚气 俊俏眉目 飞扬跋扈 十五六岁", "notes": "", "sentence": "但此刻镜子里的那位哥们儿的面目却显得颇为稚气，俊俏眉目里透着一股少年人独有的飞扬跋扈，看起来，不过十五六岁的模样。", "tagId": "tg_wm", "ts": 1779766943525, "type": "regular"}, {"id": "_ybut7ie", "keywords": "盘靓条顺 眉梢眼角风情  风华绝代韵味", "notes": "形容人面容姣好、身材匀称的惯用表达.“盘儿”指面部轮廓，“亮”表示五官精致美观；“条儿”指体态身形，“顺”则强调比例协调、线条流畅。", "sentence": "薛丫越长越大，越长越俊，盘靓条顺的，眉梢眼角都是风情，颇有些风华绝代的韵味儿。", "tagId": "tg_wm", "ts": 1779767113825, "type": "regular"}, {"id": "_7vgshi4", "keywords": "新冢 阴冷潮湿（风） 万叶千声 厉鬼冤魂 唧唧私语 沙沙游走 凿着", "notes": "", "sentence": "阴冷潮湿的寒风夹杂着万叶千声，浓雾里就像无数厉鬼冤魂在山林间唧唧私语，沙沙游走。\n薛蒙孤身行至山顶，墨燃所在的雄伟宫殿在夜幕中亮着安宁的烛光。他忽然瞧见通天塔前，立着三座坟，走近一看，第一座坟头长着青草，墓碑上歪七扭八凿着“卿贞皇后楚姬之墓”八个狗爬大字。\n第二座坟，是一座新冢，封土才刚刚盖上，碑上凿着", "tagId": "tg_hj", "ts": 1779767214756, "type": "regular"}, {"id": "_00hxofi", "keywords": "城郊夏意浓 车马驰过", "notes": "", "sentence": "城郊夏意浓，偶有车马驰过，车轮滚滚，无人会去注意此时才年方十五岁的墨燃。\n　　只偶尔有田间忙碌的村妇，得了空抬头抹汗，瞧见个格外标致的少年，会眼前一亮，盯着看两眼。\n　　墨燃也笑嘻嘻地，毫不客气地看回去，直把那些有夫之妇看得满脸绯红，低下头来。", "tagId": "tg_hj", "ts": 1779767276510, "type": "regular"}, {"id": "_lvboc7z", "keywords": "红日如血 火烧云霞 巍峨峰峦 红底黑字", "notes": "", "sentence": "傍晚时分，墨燃来到无常镇，这里离死生之巅很近了，暮色里一轮红日如血，火烧云霞衬着巍峨峰峦。一摸肚子，有些饿了，他于是熟门熟路地进了家酒楼，瞅着柜前那一溜红底黑字的菜牌子，敲敲柜台，麻利地点道：", "tagId": "tg_hj", "ts": 1779767324170, "type": "regular"}, {"id": "_4o49qdc", "keywords": "冷汗涔涔 怔怔地盯 转身没入 掠去", "notes": "", "sentence": "冷汗涔涔\n薛蒙怔怔地盯着看了一会儿，忽然心中一惊\n薛蒙转身没入夜色，朝着灯火通明的巫山殿大步掠去", "tagId": "tg_dz", "ts": 1779767425801, "type": "regular"}, {"id": "_769kw5i", "keywords": "清婉脆嗓 敲的脑仁生疼 额角经络暴跳 扎的他胸口发疼", "notes": "", "sentence": "耳边悠悠呀呀传来越女清婉脆嗓，珠玉般叮咚词句，却敲的墨燃脑仁生疼，额角经络暴跳。\n恨意和寒意，痛苦和寂冷扎的他胸口发疼，墨燃猛地睁开眼睛。", "tagId": "tg_dz", "ts": 1779767643236, "type": "regular"}, {"id": "_ttjf2bf", "keywords": "叫他这么一搂 脸都青了 从背后撕下来 扇上十七八个大耳刮子 挨 一把搂住 腿掐了把 手忽然顿住 低吟 挂着泪珠 贴腮边 渗出了一丝 弯起眼睛", "notes": "", "sentence": "墨燃叫他这么一搂，脸都青了，恨不得立刻把这小妖精从自己背后撕下来，照着他那张吹弹可破的脸扇上十七八个大耳刮子，但到底还是忍住了。\n容九见他一直不说话，还倒他心情不佳，于是起身下床，挨到镂花木窗前，从后面一把搂住墨燃。\n按着以前的路数来总是没错的。于是他回忆了一下自己当年的风流模样，忍着恶心，笑嘻嘻地在容九腿上掐了把。\n他就忍不住笑眯眯地弯起眼睛，把锋利的陶瓷碎片，贴在了容九的腮边\n手一用力，嫣红的血渗出了一丝。\n昏沉沉的人似乎感受到了疼痛，沙哑的嗓音，轻轻低吟了一声，睫毛上犹自挂着泪珠，看起来楚楚可怜。\n墨燃的手忽然顿住了。", "tagId": "tg_dz", "ts": 1779767895241, "type": "regular"}, {"id": "_id3rzsn", "keywords": "咂巴着嘴 舔舐白牙 胸腔喜悦 天资极聪慧 笑眯眯地说 指端发力 掏空细软珠宝 收入囊中 施施然 收拾好自己", "notes": "", "sentence": "他咂巴着嘴，舔舐着森森白牙，他能感受到胸腔中一缕微小的喜悦在迅速扩大，成了一种惊涛骇浪般的狂热与激动。他生前叱咤风云，人界三大禁术都有涉猎。其他两门禁术他都算是精通，唯有最后一术“重生”，纵使他天资极聪慧，也不得门道。\n　墨燃笑眯眯地说着，指端发力，把瓷片丢到窗外。\n　然后，他掏空了容九所有的细软珠宝，尽数收入自己囊中，这才好整以暇，慢慢收拾好自己，施施然离开了瓦子。", "tagId": "tg_dz", "ts": 1779768246367, "type": "regular"}, {"id": "_4dvvqol", "keywords": "奔踏而来 杀进杂耍圈 戴着黑色斗笠 裹着黑披风 挡得严严实实 粗手笨脚 满面风霜 哭开了 连滚带爬 跌跌撞撞 跪地嚎啕", "notes": "", "sentence": "议论纷纷中，一匹黑马自死生之巅的方向奔踏而来，闪电一般杀进那杂耍圈！\n　　那马匹上坐着两个人，一个戴着黑色斗笠，裹着黑披风，挡得严严实实，看不出年龄性别，另一个则是个三四十岁的妇人，粗手笨脚，满面风霜。\n　　妇人一见那些人熊就哭开了，她连滚带爬地下了马，跌跌撞撞地就冲过去，抱住了其中一只人熊就跪地嚎啕起来\n     扑上去就要围殴黑斗篷。", "tagId": "tg_dz", "ts": 1779768376540, "type": "regular"}, {"id": "_j2kplfk", "keywords": "漫不经心把玩着 一脚架在床沿 扒开油纸 大口撕咬", "notes": "", "sentence": "他坐了下来，一脚架在床沿，漫不经心地把玩着手里的碎瓷片。突然看到桌上还放着油腻腻的饼子，于是拿了过来，扒开油纸，大口大口撕咬，吃的满嘴碎渣，嘴唇油亮。", "tagId": "tg_dz", "ts": 1779768473904, "type": "regular"}, {"id": "_2akk25s", "keywords": "脸色骤变 天旋地转 摈住呼吸 难以置信睁大眼睛 低喝急奔 一掌打出 统统震开 跪坐 扶起 嗓音忍不住发颤", "notes": "", "sentence": "墨燃则脸色骤变，一时间有些天旋地转，他摈住呼吸，难以置信地睁大了眼睛——这个声音……\n墨燃低喝着急奔上来，灌满灵力一掌打出，就将五个为非作歹的江湖道士统统震开！他跪坐在地上，扶起了满身泥灰脚印的黑斗篷，嗓音都忍不住微微发颤—", "tagId": "tg_dz", "ts": 1779768624056, "type": "regular"}, {"id": "_ayvrbls", "keywords": "痛骂 纷纷附和 面色沉凝 激越 立刻嘲讽道  脸色很难看，他说 周围人炸开了 和声和气劝道 竭力按捺 面目扭曲", "notes": "", "sentence": "关起房门来痛骂过、众将领纷纷附和、有人面色沉凝，说道，\n这番话说的激越了些\n立刻又有人嘲讽道\n青年的脸色很难看，他说\n他这么一说，周围一圈人就炸开了。\n连忙拦住待要发作的青年，换作一副乡绅面孔，和声和气地劝道\n气的面目扭曲，嘴唇颤抖，却还竭力按捺着，问道：\n陡然暴怒了：\n提起他的师尊，众人的脸色都有些挂不住。\n有人面露愧色，有人则左瞟右瞟，嗫嚅不语。\n最终有人干咳两声，柔声道：\n那人睁大眼睛：\n他再也说不下去了，喉头哽咽\n讲到最后，薛蒙猛地扭过了头，肩膀微微颤抖着，忍着眼泪\n有人轻声说了句，\n有些刻薄了，立刻有人喝止住：又转头和颜悦色地劝薛蒙\n薛蒙猛然打断了他的话头，目眦尽裂\n薛蒙挣开被老和尚拉住的衣角，哑声道", "tagId": "tg_xd", "ts": 1779768736673, "type": "regular"}, {"id": "_4oj3wn4", "keywords": "只沙哑说了句 心中不知何滋味 只问 轻轻哼了一声 说着微微一笑 一愣 旋即笑道 状似不经意问 厉声道", "notes": "", "sentence": "墨燃没有抬头，只沙哑地说了句\n心中不知是何滋味，欲言又止，最终仍是捏紧了拳，只问：“\n墨燃轻轻哼了一声，终于缓缓睁开了黑中透着些紫的眼眸，隔着层峦叠嶂的岁月，落在了薛蒙身上。\n墨燃说着，微微一笑。\n容九一愣，旋即笑道：\n墨燃整理好了情绪，状似不经意地问道\n薛蒙厉声道\n墨燃眼波暗涌，脑内飞速转着。", "tagId": "tg_xd", "ts": 1779768834612, "type": "regular"}, {"id": "_o4vede6", "keywords": "简直荒唐 磨磨叽叽 胆小怕事废物 凡夫俗子（乡野村夫） 天之骄子 讥讽嘲弄 废话少说 讲什么疯话 站着说话不腰疼 哭丧鬼 贱婢", "notes": "", "sentence": "简直荒唐\n磨磨唧唧的不肯上去，难道是想等墨微雨自己爬下来？真是群胆小怕事的废物！\n薛公子是天之骄子，我们只是凡夫俗子，既然天之骄子等不及了要去和人界帝尊争锋\n忍着这些人的讥讽和嘲弄\n所以啊，十年你都等过来了，也不急于这一时半刻，你说对不对？”\n“对？去你妈的对！”\n废话少说！把他还给我！”\n讲什么疯话！管好你的嘴！\n你们站着说话不腰痛\n吵什么吵！哪里来的哭丧鬼！来人，把这贱婢给我乱棍打下山去！”", "tagId": "tg_mr", "ts": 1779769059609, "type": "regular"}, {"id": "_67u5wmo", "keywords": "啐了一口 抿了抿嘴唇 展颜笑了 慢条斯理地喊了一声 兀自思考  瞬间暴怒 嘴里嚷着 挠着头喃喃 文文弱弱喊了句 善解人意地说 呛了几声", "notes": "", "sentence": "容九的脸一红，啐了一口\n墨燃抿了抿嘴唇，展颜笑了，在珠帘后面慢条斯理地喊了一声：\n这边正兀自思考着，那边那个黑斗篷低声和那几个道士说了几句什么话，那几个道士闻言，竟是瞬间暴怒，嘴里嚷着\n有人挠着头喃喃道\n死生之巅各个都是以一当十的凶悍勇猛，这黑斗篷打架却不厉害，眼见着都被那几个江湖道士拉下马，围在中间猛踹了，却还不下狠手。\n反而文文弱弱地喊了句\n尊主干脆大手一挥，善解人意地说：\n黑斗篷呛了几声，才缓过气儿来，抬眼去看墨燃", "tagId": "tg_xd", "ts": 1779769265718, "type": "regular"}, {"id": "_594jlnk", "keywords": "法力高深，为人阴毒", "notes": "", "sentence": "墨微雨法力高深，为人阴毒，我们还是谨慎为上，不要着了他的道。", "tagId": "tg_pj", "ts": 1779769343508, "type": "regular"}, {"id": "_tga3yql", "keywords": "少年翘楚 天之骄子 虎落平阳 私仇甚深 强弩之末 成不了气候 置生死于事外 徒弟为非作歹 耍宝玩笑 死磕到最后", "notes": "", "sentence": "2. 众人吹捧阿谀的少年翘楚，天之骄子。时过境迁，虎落平阳\n3. 你和墨微雨私仇甚深。但是逼宫一事，事关重大，你千万要为大家考虑，可别意气用事呀\n4. 他如今是强弩之末，成不了气候，我们何必为了图这一时之急，贸然行事？\n5. 十年前，墨燃自封踏仙君，屠遍儒风门七十二城不算，还要剿灭剩余九大门派。再后来，墨燃称帝，要把你们赶尽杀绝，这两次浩劫，最后都是谁阻拦了他？要不是我师尊拼死相护，你们还能活着？还能好端端地站在这里跟我说话吗？”\n师尊他置身死于事外，居然是为了救你们\n6. 徒弟为非作歹，他当师父的，也该负负责，所谓子不教父之过，教不严师之惰。这本就是无可厚非的事情，又有什么好抱怨的。\n7. 墨燃是最会耍宝玩笑的徒弟，纵使薛蒙早就看他不顺眼，也时不时会被他逗得忍俊不禁。\n8.墨燃这个人，从来都是死磕到最后，从来不知道何为疲惫，何为放弃，以他的行事做派，势必会与起义军死拼到底，", "tagId": "tg_pj", "ts": 1779769579726, "type": "regular"}, {"id": "_zzw5i2w", "keywords": "三头六臂狰狞恶魔 鼻梁弧度 纯色薄润 温文甜蜜 乖巧良人 罹患精神痼疾 赖皮走狗 枝头凤凰 漂亮讨巧 贪财爱钱 命主孤煞 众叛亲离 十恶不赦 乡野村夫 绝色佳人", "notes": "", "sentence": "9.人人都道他是个三头六臂的狰狞恶魔，可是他其实生的很好看，鼻梁的弧度柔和，唇色薄润，天生长得有几分温文甜蜜，光瞧相貌，谁都会觉得他是个乖巧良人。\n10.一代修真界暴君，蜀中恶霸，人界帝尊，死生之巅尊主，踏仙君墨燃\n11. 还在和容九颠鸳倒凤，醒来就把人揍的鼻青脸肿，这种行为和罹患精神痼疾也并无不同，不妥，大大的不妥。\n12. 刚刚被死生之巅的尊主认成失散多年的侄子，从一个人尽可欺的癞皮走狗，一跃成了枝头的凤凰。\n13. 自己特别愿意在缠绵的时候，去亲一亲那张嫣红的嘴唇。毕竟这少年漂亮，讨巧，特别会说让自己心动的话，要说曾经丝毫没有动情，那是假的。\n容九最是贪财爱钱。白嫖这卖肉的一次，再顺走些银子，小小地惩戒一下就行了。\n14. 人人都说他是命主孤煞，众叛亲离，到最后他自己也觉得行尸走肉，无聊得紧，寂寞得紧。他这样十恶不赦的人\n15. 　　道士们想的是，啥？这人，都被打成这副奶奶样了，还君子动口不动手？这是馒头瓤子的脑壳儿，没馅儿吧？\n16. 乡野村夫顶着薛丫这名字没问题，但是见过绝色佳人叫“狗蛋”“铁柱”的吗？", "tagId": "tg_pj", "ts": 1779769863350, "type": "regular"}, {"id": "_3seveyh", "keywords": "修为高 药性发散缓慢", "notes": "", "sentence": "他修为甚高，毒药的药性在他体内发散的格外缓慢，因此五脏六腑被蚕食消融的痛苦也愈发深刻鲜明。", "tagId": "tg_xz", "ts": 1779769909812, "type": "regular"}, {"id": "_cs1pbb2", "keywords": "昔日同门", "notes": "", "sentence": "昔日同门再聚首。墨燃却没有什么表情，他支颐侧坐，纤细浓密的睫毛帘子垂落眼前。", "tagId": "tg_xz", "ts": 1779769923350, "type": "regular"}, {"id": "_q3f09my", "keywords": "雄厚修为跟着回来 调动法咒 感受体内灵力攒涌 充沛但不强大 天资聪颖 悟性高 重头修炼 返回门派", "notes": "", "sentence": "那前世的雄厚修为，会不会也跟着回来了？\n墨燃调动法咒，感受了一下体内灵力的攒涌，虽然充沛，但却并不强大。也就是说他的修为并没有继承过来。不过这也没什么，他天资聪颖，悟性又高，大不了重头修炼，也没什么了不起的\n。墨燃这样想着，很快收敛起了自己的阴暗和獠牙，像个十五岁少年该有的模样，高高兴兴地准备返回门派。", "tagId": "tg_xz", "ts": 1779770029724, "type": "regular"}, {"id": "_tt2u2bu", "keywords": "感受不到妖气", "notes": "", "sentence": "难怪先前他感受不到丝毫妖气，这些“貔貅”根本不是妖，而是活生生的人啊……", "tagId": "tg_xz", "ts": 1779770044993, "type": "regular"}, {"id": "_r4qr8ws", "keywords": "同门被打 门派氛围 派中掌门跟杂役 灌满灵力一掌打出 统统震开", "notes": "", "sentence": "眼见同门被打，墨燃却是低低笑了两声，“这么凶呀。”\n　　他丝毫没有出手相助的意思。前世，他就特讨厌本门这种路见不平拔刀相助的门派氛围，一个两个都跟傻子似的往上冲，村口王大妈的猫崽子爬树下不来了都要他们来帮忙，派中从掌门到杂役，各个缺心眼儿。\n\n灌满灵力一掌打出，就将五个为非作歹的江湖道士统统震开！", "tagId": "tg_xz", "ts": 1779770120280, "type": "regular"}, {"id": "_fh64sp3", "keywords": "盘 酒肆 窑子接客 小倌害了花柳病 尸骨朽没", "notes": "", "sentence": "青楼早在自己二十多岁时就盘了出去，后来改成了酒肆。\n被阎王罚去投胎到窑子接客\n特别宠爱的小倌\n这小倌后来害了花柳病，早就死掉好多年了，尸骨都该朽没了", "tagId": "tg_cs", "ts": 1779770218897, "type": "regular"}, {"id": "_5g55oif", "keywords": "酒楼 这当口打尖儿 说书先生在台子摇扇 临窗的包间 听讲书 窗下张望 支起摊子 耍把戏卖艺 满楼的人 酒楼上下", "notes": "", "sentence": "这当口打尖儿的人很多，热闹的紧，说书先生在台子上摇着扇子，正在讲死生之巅的故事，说的是眉飞色舞，唾沫横飞。\n墨燃要了个临窗的包间，边吃饭，边听人家讲书。\n这段历史，墨燃听着耳朵都快起茧子了，于是兴趣缺缺地便开始朝着窗下走神张望。正巧，楼下支了个摊子，几个道士打扮的外乡人运着个黑布蒙着的笼子，正在街头耍把戏卖艺。\n满楼的人嘎嘎笑开了，都聚到窗栏边去看下面的热闹。说书先生还在可怜巴巴地继续讲\n酒楼上下，众人乌泱泱地围将过去凑热闹", "tagId": "tg_cs", "ts": 1779770353655, "type": "regular"}, {"id": "_jdsbnx6", "keywords": "拐卖 没见识 江湖道士", "notes": "", "sentence": "这边村民没见识，在那边胡言乱语着，但墨燃却琢磨过来了。\n　　相传，有些江湖道士会去拐骗小孩，然后将孩子的舌头拔掉，让他们说不出话来，再拿滚水烫掉小孩的皮，趁着血肉模糊之际，把兽皮粘在他们身上，鲜血凝固之后，皮毛和小孩粘合在一起，看起来就和妖怪无异。这些孩子不会说话，不会写字，只能任由人欺凌，配合着表演“貔貅打算盘”这种杂耍，如果反抗，引来的就是一阵棍棒鞭打。", "tagId": "tg_cs", "ts": 1779770398191, "type": "regular"}, {"id": "_gz2pm8a", "keywords": "床 雕龙绘凤 脂粉气息 旧被褥粉红粉紫 纹饰", "notes": "", "sentence": "这张床雕龙绘凤，木头散发着沉甸甸的脂粉气息，铺上的旧被褥粉红粉紫，绣着鸳鸯戏水的纹饰，正是勾栏女人才会睡的枕被。", "tagId": "tg_wj", "ts": 1779770473158, "type": "regular"}, {"id": "_95ct9ky", "keywords": "铜镜 磨损", "notes": "", "sentence": "铜镜磨损的很厉害，但昏黄的光晕里，还是模糊可以瞧见他自己的容貌。", "tagId": "tg_wj", "ts": 1779770486549, "type": "regular"}, {"id": "_be0q3yv", "keywords": "脑壳儿 倒霉名字 全赖没学识 君子动口不动手 狗熊崽子 热闹劲儿 开眼了 牛可真吹破天了 谁信谁驴脑子", "notes": "", "sentence": "之所以取了这么个倒霉名字，全赖死生之巅的尊主没学识\n这是馒头瓤子的脑壳儿，没馅儿吧？\n这副奶奶样了，还君子动口不动手？这是馒头瓤子的脑壳儿，没馅儿吧？\n低眉顺眼毛茸茸的狗熊崽子\n这牛真可快吹破天了，谁信谁驴脑子。\n但墨燃没过多久就开眼了，二三十个驴脑子聚在他们周围看戏，时不时喝彩鼓掌，那个热闹劲儿，连酒楼里的人都忍不住探头出去看了，弄得说书先生好不尴尬。", "tagId": "tg_sy", "ts": 1779770770381, "type": "regular"}, {"id": "_gpdgbku", "keywords": "陈年私仇 不甘颓丧 凡此五味 死前种种 遣散了仆从 同仇敌忾 等等", "notes": "", "sentence": "报那么一点陈年私仇\n身前的种种不甘，颓丧，孤独，凡此五味，都还停在胸间\n\n临死前的种种犹如风吹雪散\n以传送术遣散了仆从歪七扭八凿着“卿贞皇后楚姬之墓”八个狗爬大字。\n站在权力巅峰\n名阀贵胄\n和稀泥的\n众矢之的\n不管不顾\n捱过了三年\n地方上开始蠢蠢欲动，无论是佛修、道修、还是灵修，那些无法忍受墨燃暴政的江湖义士们，都开始接二连三地发动争讨起义。\n惨不忍睹、惊天地泣鬼神的年号横空出世——“戟罢”。 绞尽脑汁想出来的两个字\n\n修真界的动荡终于全面爆发。忍气吞声了近十年的江湖义士、仙侠豪杰，终于合纵连横，组成了浩浩汤汤的百万大军，逼宫始皇墨微雨。\n\n数月浴血征伐后，义军终于来到死生之巅山脚下\n获胜曙光再望\n原本同仇敌忾地盟军内部开始各萌异心\n开膛破肚，撕咬成渣", "tagId": "tg_sy", "ts": 1779770849279, "type": "regular"}, {"id": "_trlug7k", "keywords": "", "notes": "", "sentence": "然而这时 丢下这番话", "tagId": "tg_zz", "ts": 1779770862654, "type": "regular"}, {"id": "_3vprhc2", "notes": "", "passage": "墨燃平静地望了他一眼，忍着胃部的阵阵抽痛，嘴角嘲讽，靠在帝座的椅背之上。\n眼前一阵阵发黑，他几乎觉得自己能清晰地感受到脏腑在扭曲，溶解，化成污臭的血水。\n墨燃慵懒道\n墨燃轻笑，墨燃淡淡地抬眼，墨燃倏忽笑了：（这个笑的反应是针对薛蒙提起晚宁的好）\n良久死寂。\n胃疼得像是烈火灼烧，血肉被撕成千万片碎末残渣。\n墨燃缓了口气，强作镇定。说这番话的时候，他面无表情，手指搁在紫檀长案上，指节却苍白泛青。\n喉间涌上一股腥甜，墨燃咳嗽几声，再开口时，唇齿之间尽是鲜血，但目光却是轻松自在。\n他嘶哑地说\n说完这句话后，他颓然合上双眸，毒剂攻心，烈火煎熬。\n疼痛是如此撕心裂肺，甚至薛蒙悲恸扭曲的嚎啕哀鸣也变得那样遥远，犹如隔着万丈汪洋，从水中传来。\n鲜血不住地从嘴角涌出，墨燃捏紧衣袖，肌肉阵阵痉挛。\n模糊地睁开眼睛\n墨燃撑起身子，摇摇晃晃地站起来，血迹斑驳的手指结了个法印，把自己传送到了死生之巅的通天塔前。", "sceneName": "墨燃服毒的变化", "ts": 1779770890987, "type": "scene"}, {"id": "_wl4z7re", "notes": "", "passage": "此时正是深秋，海棠花开的稠丽风流。\n　　他不知道自己为何最后会选择在这里结束罪恶的一生。但觉花开得如此灿烂，不失为芳冢。\n　　他躺进敞开的棺椁，仰面看着夜间繁花，无声飘谢。\n　　飘入棺中，飘于脸颊。纷纷扬扬，如往事凋零去。\n　　这一生，从一无所有的私生子，历经无数，成为人间界唯一的帝君尊主。\n　　他罪恶至极，满手鲜血，所爱所恨，所愿所憎，到最后，什么都不再剩下。\n　　他也终究，没有用他那信马由缰的字儿，给自己的墓碑上提一句话。不管是臭不要脸的“千古一帝”，还是荒谬如“油爆”“清蒸”，他什么都没写，修真界始皇的坟茔，终究片言不曾留。\n　　一场持续了十年之久的闹剧，终于谢了幕。\n　　又过了好几个时辰，当众人高举着通明火把，犹如一条火蛇，窜入帝王行宫时，等着他们的，却是空荡荡的巫山殿，是了无一人的死生之巅，是红莲水榭旁，伏倒在一地骨灰余烬中哭到麻木的薛蒙。\n　　还有，通天塔前，那个连尸体都已经冷透了的墨微雨。", "sceneName": "临死前", "ts": 1779770931564, "type": "scene"}, {"id": "_3e3loy4", "keywords": "年少时糟糕的审美（举例：年轻时发的说说）", "notes": "", "sentence": "千娇百媚雌雄莫辨的小美人，但是现如今，三十二岁高龄的踏仙君，怎么看怎么怀疑自己当时脑子是叫驴尥了，才会觉得这种男人好看。\n\n这人做的是皮肉生意，没了这张脸，就什么都没了。\n这媚俗的男人，就会跟狗一样流落街头，在地上爬，被靴子踹，被碾被骂被唾弃，哎呦……真是想象就让他身心愉悦。简直连刚刚这个人的恶心，都就此烟消云散了", "tagId": "_z9z89ck", "ts": 1779771121272, "type": "regular"}, {"id": "_t55g1hb", "keywords": "", "notes": "", "sentence": "天下不公平事那么多，管什么管呀，累死个人", "tagId": "_z9z89ck", "ts": 1779771138605, "type": "regular"}, {"id": "_63wnrw1", "keywords": "", "notes": "", "sentence": "这些人爱看打架，墨燃可不爱看，他见过的血雨腥风多了去了，眼皮子底下发生的事对他而言就跟苍蝇嗡嗡似的。他懒洋洋地掸掸衣服上的花生碎屑，起身离开", "tagId": "_z9z89ck", "ts": 1779771145840, "type": "regular"}, {"id": "_r4kntvr", "keywords": "古人取贱名的趣事", "notes": "", "sentence": "师昧原本是个孤儿，是被尊主在野外捡回来的，这孩子打小体弱多病，尊主就寻思着，得给这娃儿取个贱名，贱名好养活。小孩生的唇红齿白，像个挺招人疼爱的小丫头，于是尊主绞尽脑汁，给人家想了个名字，叫薛丫。", "tagId": "_z9z89ck", "ts": 1779771170674, "type": "regular"}, {"id": "_hogxgqf", "keywords": "他觉得自己办了一件好事但", "notes": "", "sentence": "还好意思问怎么样…正常人哪儿受的了这驴名字？但师昧脾气好，他抬眼看了看尊主，发现对方正喜滋滋兴冲冲地瞧着他，敢情还以为自己做了件天大的好事呢。师昧不忍心，觉得就算自己委屈，也不能扫了尊主大人的颜面。于是欣然跪谢，从此改名换姓。", "tagId": "_z9z89ck", "ts": 1779771211663, "type": "regular"}, {"id": "_1sxtnta", "keywords": "", "notes": "", "sentence": "“是不是昨晚没睡好，做噩梦了？”\n　　本座都死了，你说算不算噩梦。", "tagId": "_vzh5ykh", "ts": 1779771235365, "type": "regular"}, {"id": "_2rw5om4", "keywords": "越剧莫愁女", "notes": "", "sentence": "“我本已心如死水万念灰，却不料三九寒夜透春光，莫不是天意偏怜幽谷草，怕只怕世态炎凉多风霜。”", "tagId": "_xrjs0n7", "ts": 1779771254211, "type": "regular"}]}, "tags": [{"id": "tg_wm", "label": "外貌"}, {"id": "tg_hj", "label": "环境"}, {"id": "tg_dz", "label": "动作"}, {"id": "tg_xd", "label": "xx道"}, {"id": "tg_mr", "label": "骂人"}, {"id": "tg_pj", "label": "评价他人"}, {"id": "tg_xz", "label": "修真设定"}, {"id": "tg_cs", "label": "常识"}, {"id": "tg_wj", "label": "物件"}, {"id": "tg_sy", "label": "熟语成语"}, {"id": "tg_zz", "label": "小说转折句"}, {"id": "_z9z89ck", "label": "逻辑链"}, {"id": "_xrjs0n7", "label": "戏剧用典"}, {"id": "_vzh5ykh", "label": "笑点"}]};
+
+function sanitizeDB(d){
+  if(!d) d = {};
+  if(!d.books) d.books = [];
+  // 修复：确保每本书都有 chapters 数组
+  d.books = d.books.map(b=>({...b, chapters: b.chapters||[]}));
+  if(!d.entries) d.entries = {};
+  if(!d.tags) d.tags = [...DEFAULT_TAGS];
+  return d;
+}
+
 cloudRef.once('value').then(snapshot => {
   const data = snapshot.val();
-  if(data) db = data;
-  // 确保 entries 是对象而非 null
-  if(!db.entries) db.entries = {};
-  if(!db.tags) db.tags = [...DEFAULT_TAGS];
-  if(!db.books) db.books = [];
+  db = sanitizeDB(data || SEED_DATA);
   document.getElementById('loading-mask').classList.add('hidden');
   renderBooks();
 }).catch(e => {
   console.error('云端加载失败，使用本地备份:', e);
-  // 降级：读本地 localStorage
-  try{ db = JSON.parse(localStorage.getItem('cbj3')) || newDB(); }catch{}
+  try{
+    const local = localStorage.getItem('cbj3');
+    db = sanitizeDB(local ? JSON.parse(local) : SEED_DATA);
+  }catch{ db = sanitizeDB(SEED_DATA); }
   document.getElementById('loading-mask').classList.add('hidden');
   renderBooks();
 });
@@ -288,7 +299,7 @@ function renderBooks(){
   if(!db.books.length){el.innerHTML='<div class="empty">还没有书籍<br>点击右下角 + 添加第一本</div>';return}
   if(bookManage){
     el.innerHTML=db.books.map(b=>{
-      const cnt=b.chapters.reduce((a,c)=>a+getEntries(c.id).length,0);
+      const cnt=(b.chapters||[]).reduce((a,c)=>a+getEntries(c.id).length,0);
       return`<div class="mgr-row">
         <div style="font-size:14px;color:#333;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">《${esc(b.name)}》</div>
         <span style="font-size:12px;color:#888;flex-shrink:0;margin-right:10px">${cnt}条摘录</span>
@@ -298,8 +309,8 @@ function renderBooks(){
     return;
   }
   el.innerHTML=db.books.map(b=>{
-    const chCnt=b.chapters.length;
-    const eCnt=b.chapters.reduce((a,c)=>a+getEntries(c.id).length,0);
+    const chCnt=(b.chapters||[]).length;
+    const eCnt=(b.chapters||[]).reduce((a,c)=>a+getEntries(c.id).length,0);
     return`<div class="li" onclick="openBook('${b.id}')">
       <div class="li-main">
         <div class="li-title">《${esc(b.name)}》</div>
@@ -623,7 +634,51 @@ function exportTxt(){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='全库小说拆书笔记归档.txt';a.click();
 }
 
-// 初始化（数据加载由上方 cloudRef.once 异步处理，此处仅处理标签页路由）
+
+// ── 本地备份：下载 JSON 文件 ──
+function backupLocal(){
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const d = new Date();
+  a.download = `拆书笔记备份_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── 从本地导入 JSON 文件 ──
+function importLocal(){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try{
+        const imported = JSON.parse(ev.target.result);
+        if(!imported.books || !imported.entries){
+          alert('文件格式不对，请选择本工具导出的备份 JSON 文件');
+          return;
+        }
+        if(!confirm(`确认导入？这会覆盖当前所有数据（共 ${imported.books.length} 本书）。建议先备份当前数据。`)) return;
+        db = sanitizeDB(imported);
+        // 同步存到本地和云端
+        localStorage.setItem('cbj3', JSON.stringify(db));
+        save();
+        renderBooks();
+        alert('导入成功！');
+      }catch(err){
+        alert('读取文件失败：' + err.message);
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+  input.click();
+}
+
+// 初始化
 const _goTo=goTo;
 window.goTo=function(id){_goTo(id);if(id==='pg-tags')renderTags()};
 </script>
